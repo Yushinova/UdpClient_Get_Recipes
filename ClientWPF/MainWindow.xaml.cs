@@ -34,40 +34,42 @@ namespace ClientWPF
         public ObservableCollection<Recipe> Resipes = new ObservableCollection<Recipe>();
         public List<string> changeingrid = new List<string>();
         public BinaryFormatter formatter = new BinaryFormatter();
+        public int findMode;
+        public string name;
         public MainWindow()
         {
 
             InitializeComponent();
-            client.ConnectServer();
             SetIngrid.ItemsSource = Ingredients;
             ListRecipe.ItemsSource = Resipes;
-           // Task.Run(SetConnection);//можно ли так делать? нельзя все виснет
+            // Task.Run(SetConnection);//можно ли так делать? нельзя все виснет
 
         }
 
         private void SetConnection()
         {
-          
-                try
-                {
-                    client.SendClient(Encoding.UTF8.GetBytes("0"));
-                    byte[] ansver;
 
-                    ansver = client.ReciveClient();
-                    if (Encoding.UTF8.GetString(ansver) == "1")
-                    {
-                        Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Green)));
-                        Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер доступен!"));
-                        //break;
-                    }
-                }
-                catch
-                {
-                    Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Red)));
-                    Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер недоступен!"));
-                }
+            try
+            {
+                client.ConnectServer();
+                client.SendClient(Encoding.UTF8.GetBytes("0"));
+                byte[] ansver;
 
-            
+                ansver = client.ReciveClient();
+                if (Encoding.UTF8.GetString(ansver) == "1")
+                {
+                    Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Green)));
+                    Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер доступен!"));
+                    //break;
+                }
+            }
+            catch
+            {
+                Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Red)));
+                Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер недоступен!"));
+            }
+
+
         }
 
         private void AllRecipeButton_Click(object sender, RoutedEventArgs e)//просим у сервера все рецепты
@@ -113,7 +115,9 @@ namespace ClientWPF
         private void FindIngridButton_Click(object sender, RoutedEventArgs e)
         {
             SetIngrid.Visibility = Visibility.Visible;
-           
+            FindText.Visibility = Visibility.Hidden;
+            findMode = 1;
+
         }
 
         private void SetIngrid_SelectionChanged(object sender, SelectionChangedEventArgs e)//выбираем ингридиенты и добавляем их в лист
@@ -121,10 +125,10 @@ namespace ClientWPF
             StackPanel panel = new StackPanel();
             panel.Background = new SolidColorBrush(Colors.LightGray);
             panel.Orientation = Orientation.Horizontal;
-            panel.Width =80;
+            panel.Width = 80;
             panel.Height = 20;
-            panel.Margin = new Thickness(10,0,0,0);
-         
+            panel.Margin = new Thickness(10, 0, 0, 0);
+
             TextBlock text = new TextBlock();
             text.Text = SetIngrid.SelectedItem.ToString();
             text.Margin = new Thickness(5, 0, 0, 0);
@@ -134,7 +138,7 @@ namespace ClientWPF
             button.Background = new SolidColorBrush(Colors.LightBlue);
             button.Padding = new Thickness(0, -5, 0, 0);
             button.Content = "x";
-           
+
             button.Margin = new Thickness(5, 0, 0, 0);
             button.Click += new RoutedEventHandler(Delet_Ingredients_Click);//кнопка удаления любого ингридиента событие
             panel.Children.Add(text);
@@ -153,54 +157,99 @@ namespace ClientWPF
 
         private void FindButton_Click(object sender, RoutedEventArgs e)
         {
-            SetIngrid.Visibility = Visibility.Hidden;
-            Grid_4.Children.Clear();
-            if(changeingrid.Count>0)
+            byte[] bytes;
+            if (findMode == 1)
             {
-                byte[] bytes;
-                using (MemoryStream stream = new MemoryStream())
+                SetIngrid.Visibility = Visibility.Hidden;
+                Grid_4.Children.Clear();
+                if (changeingrid.Count > 0)
                 {
-                    formatter = new BinaryFormatter();
-                    formatter.Serialize(stream, changeingrid);
-                    bytes = stream.ToArray();
-                }
-                client.SendClient(Encoding.UTF8.GetBytes("2"));
-                client.SendClient(bytes);
-                changeingrid.Clear();
-                try
-                {
-                   
-                    byte[] all = client.Recive_Many_Bytes();//получаем буфер
 
-                    List<Recipe> recipes = new List<Recipe>();
-                   
-                    using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
+                    using (MemoryStream stream = new MemoryStream())
                     {
                         formatter = new BinaryFormatter();
-                        recipes = (List<Recipe>)formatter.Deserialize(stream);
+                        formatter.Serialize(stream, changeingrid);
+                        bytes = stream.ToArray();
                     }
-                    if (recipes.Count == 0)
+                    client.SendClient(Encoding.UTF8.GetBytes("2"));
+                    client.SendClient(bytes);
+                    changeingrid.Clear();
+                    try
+                    {
+
+                        byte[] all = client.Recive_Many_Bytes();//получаем буфер
+
+                        List<Recipe> recipes = new List<Recipe>();
+
+                        using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
+                        {
+                            formatter = new BinaryFormatter();
+                            recipes = (List<Recipe>)formatter.Deserialize(stream);
+                        }
+                        if (recipes.Count == 0)
+                        {
+                            MessageBox.Show("Рецепты не найдены. Попробуйте изменить ингридиенты");
+                        }
+                        Resipes.Clear();
+                        foreach (var item in recipes)
+                        {
+
+                            Resipes.Add(item);
+                        }
+                    }
+                    catch
                     {
                         MessageBox.Show("Рецепты не найдены. Попробуйте изменить ингридиенты");
                     }
-                    Resipes.Clear();
-                    foreach (var item in recipes)
-                    {
-
-                        Resipes.Add(item);
-                    }
-                }
-                catch
-                {
-                    MessageBox.Show("Рецепты не найдены. Попробуйте изменить ингридиенты");
                 }
             }
-           
+            else
+            {
+                if (FindText.Text != string.Empty)
+                {
+                    client.SendClient(Encoding.UTF8.GetBytes("3"));
+                    client.SendClient(Encoding.UTF8.GetBytes(FindText.Text));
+                    try
+                    {
+
+                        byte[] all = client.Recive_Many_Bytes();//получаем буфер
+
+                        List<Recipe> recipes = new List<Recipe>();
+
+                        using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
+                        {
+                            formatter = new BinaryFormatter();
+                            recipes = (List<Recipe>)formatter.Deserialize(stream);
+                        }
+                        if (recipes.Count == 0)
+                        {
+                            MessageBox.Show("Рецепты не найдены");
+                        }
+                        Resipes.Clear();
+                        foreach (var item in recipes)
+                        {
+
+                            Resipes.Add(item);
+                        }
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Рецепты не найдены");
+                    }
+                }
+            }
+
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             SetConnection();
+        }
+
+        private void FindNameButton_Click(object sender, RoutedEventArgs e)
+        {
+            findMode = 2;
+            FindText.Visibility = Visibility.Visible;
         }
     }
 }

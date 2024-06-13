@@ -81,7 +81,19 @@ namespace UdpServer
                                 server.Send_Many_Bytes(byffer);
                             }
                                 break;
-                         default:
+                        case "3"://ищем по названию
+                            byffer = server.ReciveServer();
+                            string name = Encoding.UTF8.GetString(byffer);
+                            if(name!=string.Empty)
+                            {
+                                temp = FindName(name);
+                                byffer = GetBytesFromList(temp);
+                                //отправляем размер нашего буфера
+                                server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
+                                server.Send_Many_Bytes(byffer);
+                            }
+                            break;
+                        default:
                             Console.WriteLine("НЕИЗВЕСТНЫЙ ЗАПРОС!");
                             break;
 
@@ -102,6 +114,12 @@ namespace UdpServer
             {
                 List<Recipe> choise = new List<Recipe>();
                 choise = recipes.Where(r => isContain(r, ingredients)).ToList();
+                return choise;
+            }
+            List<Recipe> FindName(string name)//ищем по названию
+            {
+                List<Recipe> choise = new List<Recipe>();
+                choise = recipes.Where(r => r.Name.ToUpperInvariant().Contains(name.ToUpperInvariant())).ToList();
                 return choise;
             }
             bool isContain(Recipe recipe, List<string> ingred)//если все ингредиенты найдены в рецепте в любом порядке, возвращает true
