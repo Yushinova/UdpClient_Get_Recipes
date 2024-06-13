@@ -37,6 +37,9 @@
             <Button x:Name="AllRecipeButton" Width="150" Height="20" 
                     Content="Все рецепты" FontSize="14" Margin="20,0,0,0"
                     Background="AliceBlue" BorderBrush="AliceBlue" Click="AllRecipeButton_Click"/>
+            <Button x:Name="ConnectButton" Content="Подключиться к серверу"
+                    Margin="450,0,0,0" Background="Blue" Foreground="White"
+                    Height="20" Click="ConnectButton_Click" />
         </StackPanel>
         <StackPanel x:Name="Grid_3" Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="FindNameButton" Width="300" Height="20" 

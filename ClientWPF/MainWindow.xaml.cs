@@ -47,16 +47,13 @@ namespace ClientWPF
 
         private void SetConnection()
         {
-            MyUdpClient client2 = new MyUdpClient { udpClient = new UdpClient(), serverEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5555) };
-
-            while (true)
-            {
+          
                 try
                 {
-                    client2.SendClient(Encoding.UTF8.GetBytes("0"));
+                    client.SendClient(Encoding.UTF8.GetBytes("0"));
                     byte[] ansver;
 
-                    ansver = client2.ReciveClient();
+                    ansver = client.ReciveClient();
                     if (Encoding.UTF8.GetString(ansver) == "1")
                     {
                         Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Green)));
@@ -70,8 +67,7 @@ namespace ClientWPF
                     Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер недоступен!"));
                 }
 
-                Task.Delay(5000).Wait();
-            }
+            
         }
 
         private void AllRecipeButton_Click(object sender, RoutedEventArgs e)//просим у сервера все рецепты
@@ -200,6 +196,11 @@ namespace ClientWPF
                 }
             }
            
+        }
+
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetConnection();
         }
     }
 }
