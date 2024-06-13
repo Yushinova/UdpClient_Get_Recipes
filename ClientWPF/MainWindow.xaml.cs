@@ -34,8 +34,8 @@ namespace ClientWPF
         public ObservableCollection<Recipe> Resipes = new ObservableCollection<Recipe>();
         public List<string> changeingrid = new List<string>();
         public BinaryFormatter formatter = new BinaryFormatter();
+       public List<Recipe> recipes = new List<Recipe>();
         public int findMode;
-        public string name;
         public MainWindow()
         {
 
@@ -81,7 +81,7 @@ namespace ClientWPF
 
                 byte[] all = client.Recive_Many_Bytes();//получаем буфер
 
-                List<Recipe> recipes = new List<Recipe>();
+               
                 using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
                 {
                     formatter = new BinaryFormatter();
@@ -179,8 +179,6 @@ namespace ClientWPF
 
                         byte[] all = client.Recive_Many_Bytes();//получаем буфер
 
-                        List<Recipe> recipes = new List<Recipe>();
-
                         using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
                         {
                             formatter = new BinaryFormatter();
@@ -199,7 +197,7 @@ namespace ClientWPF
                     }
                     catch
                     {
-                        MessageBox.Show("Рецепты не найдены. Попробуйте изменить ингридиенты");
+                        MessageBox.Show("Связь с сервером нестабильна((");
                     }
                 }
             }
@@ -213,8 +211,6 @@ namespace ClientWPF
                     {
 
                         byte[] all = client.Recive_Many_Bytes();//получаем буфер
-
-                        List<Recipe> recipes = new List<Recipe>();
 
                         using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
                         {
@@ -234,7 +230,7 @@ namespace ClientWPF
                     }
                     catch
                     {
-                        MessageBox.Show("Рецепты не найдены");
+                        MessageBox.Show("Связь с сервером нестабильна((");
                     }
                 }
             }
@@ -246,7 +242,7 @@ namespace ClientWPF
             SetConnection();
         }
 
-        private void FindNameButton_Click(object sender, RoutedEventArgs e)
+        private void FindNameButton_Click(object sender, RoutedEventArgs e)//искать по названию
         {
             findMode = 2;
             FindText.Visibility = Visibility.Visible;
