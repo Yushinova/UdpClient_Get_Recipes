@@ -42,6 +42,7 @@ namespace ClientWPF
             InitializeComponent();
             SetIngrid.ItemsSource = Ingredients;
             ListRecipe.ItemsSource = Resipes;
+            client.ConnectServer();
             // Task.Run(SetConnection);//можно ли так делать? нельзя все виснет
 
         }
@@ -51,7 +52,7 @@ namespace ClientWPF
 
             try
             {
-                client.ConnectServer();
+               
                 client.SendClient(Encoding.UTF8.GetBytes("0"));
                 byte[] ansver;
 
