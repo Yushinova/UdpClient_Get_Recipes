@@ -8,6 +8,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace MyClasses
 {
@@ -20,14 +22,58 @@ namespace MyClasses
         public byte[] ByteImage_ { get; set; }
 
     }
+    public class User : INotifyPropertyChanged
+    {
+        public IPEndPoint endPoint {  get; set; }
+        public DateTime firstquery {  get; set; }
+        public string sessionstring { get; set; }
+        public bool isblock { get; set; } = false;
+        public int countquery { get; set; } = 0;
+
+        public string Sessionstring
+        {
+            get { return sessionstring; }
+            set
+            {
+                sessionstring = value;
+                OnPropertyChanged("Sessionstring");
+            }
+        }
+        public int Countquery
+        {
+            get { return countquery; }
+            set
+            {
+                countquery = value;
+                OnPropertyChanged("Countquery");
+            }
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(prop));
+        }
+    }
+    public class Query
+    {
+        public IPEndPoint endPoint { get; set; }
+        public string code { get; set; }
+        public DateTime timequery { get; set; }
+        public override string ToString()
+        {
+            return $"[{endPoint.Address.ToString()}/{endPoint.Port.ToString()}] время: {timequery.ToShortTimeString()} {code}";
+        }
+    }
+
     public class MyUdpServer
     {
         public UdpClient udpServer { get; set; }
-        public IPEndPoint remoteEndpoint { get; set; }
 
         public IPEndPoint clientpoint;
 
-        //public BinaryFormatter formatter = new BinaryFormatter();
+        public List<User> users = new List<User>();
+
         public void ServerClose()
         {
             udpServer.Close();
@@ -88,7 +134,7 @@ namespace MyClasses
             }
 
         }
-        
+
     }
     public class MyUdpClient
     {

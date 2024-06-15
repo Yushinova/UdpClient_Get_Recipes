@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyClasses", "MyClasses\MyCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientWPF", "ClientWPF\ClientWPF.csproj", "{A3509199-4A91-4E75-81AB-553B50A5486E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdpServerWPF", "UdpServerWPF\UdpServerWPF.csproj", "{6A359413-B8DF-4AA1-B635-1AEF1351444F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A3509199-4A91-4E75-81AB-553B50A5486E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3509199-4A91-4E75-81AB-553B50A5486E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3509199-4A91-4E75-81AB-553B50A5486E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A359413-B8DF-4AA1-B635-1AEF1351444F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A359413-B8DF-4AA1-B635-1AEF1351444F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A359413-B8DF-4AA1-B635-1AEF1351444F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A359413-B8DF-4AA1-B635-1AEF1351444F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

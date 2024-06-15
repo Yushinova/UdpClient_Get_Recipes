@@ -34,7 +34,7 @@ namespace ClientWPF
         public ObservableCollection<Recipe> Resipes = new ObservableCollection<Recipe>();
         public List<string> changeingrid = new List<string>();
         public BinaryFormatter formatter = new BinaryFormatter();
-       public List<Recipe> recipes = new List<Recipe>();
+        public List<Recipe> recipes = new List<Recipe>();
         public int findMode;
         public MainWindow()
         {

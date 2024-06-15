@@ -40,7 +40,7 @@ namespace UdpServer
             };
             BinaryFormatter formatter = new BinaryFormatter();
           
-            MyUdpServer server = new MyUdpServer { udpServer = new UdpClient(5555), remoteEndpoint = new IPEndPoint(IPAddress.Any, 0) };
+            MyUdpServer server = new MyUdpServer { udpServer = new UdpClient(5555), clientpoint = new IPEndPoint(IPAddress.Any, 0) };
 
             Console.WriteLine("Waiting for the client.......");
 
