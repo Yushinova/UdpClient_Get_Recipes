@@ -123,9 +123,9 @@ namespace UdpServerWPF
                 
             }
         }
-        public void StartServer()//большая халабуда
+        public void StartServer()//логика работы сервера (вынести отдельно!!)
         {
-            Dispatcher.Invoke(new Action(() => MessageBox.Show("Сервер подключен!")));
+            Dispatcher.Invoke(new Action(() => MessageBox.Show("Сервер поключен!")));
             try
             {
                 while (server != null)
@@ -135,9 +135,9 @@ namespace UdpServerWPF
                     List<Recipe> temp = new List<Recipe>();
                     byte[] byffer = server.ReciveServer();
                     string ansver = Encoding.UTF8.GetString(byffer);
-                    Dispatcher.Invoke(new Action(() => AddUser(server.clientpoint, DateTime.Now)));
-                    Dispatcher.Invoke(new Action(() => AddQuery(server.clientpoint, DateTime.Now, ansver)));
-                    Dispatcher.Invoke(new Action(() => SetTimeQuery(server.clientpoint, DateTime.Now)));
+                    Dispatcher.Invoke(new Action(() => AddUser(server.clientpoint, DateTime.Now)));//добавление юзера, если его еще нет в списке
+                    Dispatcher.Invoke(new Action(() => AddQuery(server.clientpoint, DateTime.Now, ansver)));//добавление запроса 
+                    Dispatcher.Invoke(new Action(() => SetTimeQuery(server.clientpoint, DateTime.Now)));//переустановка длительности сессии и количества запросов
                     // Console.WriteLine(ansver);
                     switch (ansver)
                     {
@@ -191,14 +191,16 @@ namespace UdpServerWPF
         }
         private void FinishButtom_Click(object sender, RoutedEventArgs e)//остановить все подключения
         {
-
-            server.ServerClose();
+            Task.Delay(2000).Wait();
+            if(server!=null)
+            {
+                server.ServerClose();
+               // Dispatcher.Invoke(new Action(() => MessageBox.Show("Сервер отключен!")));
+            }         
             server = null;
-            Dispatcher.Invoke(new Action(() => MessageBox.Show("Сервер отключен!")));
 
         }
-
-       
+     
         public List<Recipe> Choise(List<string> ingredients)//возвращает лист найденных рецептов
         {
             List<Recipe> choise = new List<Recipe>();
@@ -246,6 +248,14 @@ namespace UdpServerWPF
             }
         }
 
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsGrid.Visibility = Visibility.Visible;
+        }
 
+        private void CloseSetButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsGrid.Visibility = Visibility.Hidden;
+        }
     }
 }
