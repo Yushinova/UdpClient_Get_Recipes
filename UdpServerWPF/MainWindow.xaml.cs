@@ -122,6 +122,8 @@ namespace UdpServerWPF
             {
                 Dispatcher.Invoke(new Action(() => MessageBox.Show("Ошибка адрес/порт!")));
             }
+            Dispatcher.Invoke(new Action(() => MessageBox.Show("Ограничения установлены!")));
+            SettingsGrid.Visibility = Visibility.Hidden;
         }
         ///нужное!!!!
         public void AddUser(IPEndPoint point, DateTime dateTime)//добавляем новогоклиента, если его нет еще в списке
