@@ -49,10 +49,8 @@ namespace ClientWPF
 
         private void SetConnection()
         {
-
             try
-            {
-               
+            {             
                 client.SendClient(Encoding.UTF8.GetBytes("0"));
                 byte[] ansver;
 
@@ -61,7 +59,11 @@ namespace ClientWPF
                 {
                     Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Green)));
                     Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер доступен!"));
-                    //break;
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Red)));
+                    Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер недоступен!"));
                 }
             }
             catch
@@ -69,8 +71,6 @@ namespace ClientWPF
                 Dispatcher.Invoke(new Action(() => Online.Fill = new SolidColorBrush(Colors.Red)));
                 Dispatcher.Invoke(new Action(() => OnlineText.Text = "Сервер недоступен!"));
             }
-
-
         }
 
         private void AllRecipeButton_Click(object sender, RoutedEventArgs e)//просим у сервера все рецепты
@@ -79,10 +79,8 @@ namespace ClientWPF
             client.SendClient(Encoding.UTF8.GetBytes("1"));//код 1-получить все рецепты
             try
             {
-
                 byte[] all = client.Recive_Many_Bytes();//получаем буфер
-
-               
+            
                 using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
                 {
                     formatter = new BinaryFormatter();
@@ -108,7 +106,6 @@ namespace ClientWPF
                 var res = server.ReceiveAsync();
                 all = all.Concat(res.Result.Buffer).ToArray();
                 res.Dispose();
-                // Console.WriteLine(all.Length);
             }
             return all;
         }
@@ -118,7 +115,6 @@ namespace ClientWPF
             SetIngrid.Visibility = Visibility.Visible;
             FindText.Visibility = Visibility.Hidden;
             findMode = 1;
-
         }
 
         private void SetIngrid_SelectionChanged(object sender, SelectionChangedEventArgs e)//выбираем ингридиенты и добавляем их в лист
@@ -165,7 +161,6 @@ namespace ClientWPF
                 Grid_4.Children.Clear();
                 if (changeingrid.Count > 0)
                 {
-
                     using (MemoryStream stream = new MemoryStream())
                     {
                         formatter = new BinaryFormatter();
@@ -177,7 +172,6 @@ namespace ClientWPF
                     changeingrid.Clear();
                     try
                     {
-
                         byte[] all = client.Recive_Many_Bytes();//получаем буфер
 
                         using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
@@ -192,7 +186,6 @@ namespace ClientWPF
                         Resipes.Clear();
                         foreach (var item in recipes)
                         {
-
                             Resipes.Add(item);
                         }
                     }
@@ -210,7 +203,6 @@ namespace ClientWPF
                     client.SendClient(Encoding.UTF8.GetBytes(FindText.Text));
                     try
                     {
-
                         byte[] all = client.Recive_Many_Bytes();//получаем буфер
 
                         using (MemoryStream stream = new MemoryStream(all))//десериализует все верно!
@@ -225,7 +217,6 @@ namespace ClientWPF
                         Resipes.Clear();
                         foreach (var item in recipes)
                         {
-
                             Resipes.Add(item);
                         }
                     }

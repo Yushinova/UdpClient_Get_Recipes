@@ -29,16 +29,18 @@ namespace UdpServerWPF
     public partial class MainWindow : Window
     {
         public string ImagesPath = AppDomain.CurrentDomain.BaseDirectory.ToString();//путь к папке bin
-
         public BinaryFormatter formatter = new BinaryFormatter();
-
         public List<Recipe> recipes;
-
         public ObservableCollection<User> users = new ObservableCollection<User>();
         public ObservableCollection<Query> queries = new ObservableCollection<Query>();
-        public MyUdpServer server/* = new MyUdpServer { udpServer = new UdpClient(5555), clientpoint = new IPEndPoint(IPAddress.Any, 0) }*/;
-
+        public MyUdpServer server;
         public Task task;
+
+        //ограничение количества подключений и ограничение по отдельным адресам
+        public List<IPEndPoint> badadresses = new List<IPEndPoint>();//адреса с ограничением
+        public int maxcountusers = int.MaxValue;//лимит для количества подключенных клиентов
+        public int maxcountqueries;//лимит для количества запросов клиента
+        public int limintime;//время за которое должны быть высчитаны запросы
         public MainWindow()
         {
             recipes = new List<Recipe>//лист рецептов получаем из базы данных (переводим картинки в байты сразу) 
@@ -63,64 +65,98 @@ namespace UdpServerWPF
             InitializeComponent();
             GridUsers.ItemsSource = users;
             ListQuery.ItemsSource = queries;
-            //task = new Task(StartServer);
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)//запуск сервера
         {
-
             try
             {
                 server = new MyUdpServer { udpServer = new UdpClient(5555), clientpoint = new IPEndPoint(IPAddress.Any, 0) };
                 task = Task.Factory.StartNew(StartServer);
-                //task.Start();
             }
             catch
             {
                 MessageBox.Show("Сервер уже запущен!");
             }
-
         }
-        public void AddUser(IPEndPoint point, DateTime dateTime)//добавляем нового юзера, если его нет еще в списке
+
+        private void FinishButtom_Click(object sender, RoutedEventArgs e)//остановить все подключения
+        {
+            Task.Delay(2000).Wait();
+            if (server != null)
+            {
+                server.ServerClose();
+            }
+            server = null;
+        }
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)//вызываем панель с настройками
+        {
+            SettingsGrid.Visibility = Visibility.Visible;
+        }
+
+        private void CloseSetButton_Click(object sender, RoutedEventArgs e)//закрываем панель с настойками
+        {
+            SettingsGrid.Visibility = Visibility.Hidden;
+        }
+
+        private void SetButton_Click(object sender, RoutedEventArgs e)//установка всех ограничений в настройках
+        {
+            if (int.TryParse(CountUserText.Text, out maxcountusers)) maxcountusers = int.Parse(CountUserText.Text);//количество клиентов
+
+            if (int.TryParse(TimeText.Text, out limintime)) limintime = int.Parse(TimeText.Text);//лимит времени клиента
+
+            if (int.TryParse(CountQueryText.Text, out maxcountqueries)) maxcountqueries = int.Parse(CountQueryText.Text);//количество запросов
+
+            try
+            {
+                int port;
+                if (int.TryParse(PortText.Text, out port))//
+                {
+                    port = int.Parse(PortText.Text);
+                }
+                IPAddress address = IPAddress.Parse(IPText.Text);
+                IPEndPoint badpoint = new IPEndPoint(address, port);//получаем адрес ограниченного клиента
+                badadresses.Add(badpoint);
+            }
+            catch
+            {
+                Dispatcher.Invoke(new Action(() => MessageBox.Show("Ошибка адрес/порт!")));
+            }
+        }
+        ///нужное!!!!
+        public void AddUser(IPEndPoint point, DateTime dateTime)//добавляем новогоклиента, если его нет еще в списке
         {
             if (users.Count > 0)
             {
                 if (!users.Any(u => u.endPoint.ToString() == point.ToString()))
                 {
-                    users.Add(new User { endPoint=point, firstquery = dateTime});
-
+                    users.Add(new User { endPoint = point, firstquery = dateTime });
                 }
             }
             else
             {
-                users.Add(new User { endPoint = point, firstquery = dateTime});
+                users.Add(new User { endPoint = point, firstquery = dateTime });
             }
-
         }
-        public void AddQuery(IPEndPoint point, DateTime dateTime, string code_)//добавляем в очередь запросы
+        public void AddQuery(IPEndPoint point, DateTime dateTime, string code_)//добавляем запросы в лист
         {
-            string code="";
+            string code = "";
             if (code_ == "0") code = "Запрос на подключение [0]";
             if (code_ == "1") code = "Получение всех рецептов [1]";
             if (code_ == "2") code = "Получить рецепты по ингридиентам [2]";
             if (code_ == "3") code = "Получить рецепты по названию [3]";
-            Query query = new Query {endPoint=point, timequery= dateTime, code = code };
+            Query query = new Query { endPoint = point, timequery = dateTime, code = code };
             queries.Add(query);
-           
-
         }
-        public void SetTimeQuery(IPEndPoint point, DateTime dateTime)//устанавливаем время длительности сессии и количество запросов
+        public void SetTimeQuery(IPEndPoint point, DateTime dateTime)//устанавливаем время длительности сессии, количество запросов
         {
             foreach (var item in users)
             {
                 if (item.endPoint.ToString() == point.ToString())
                 {
-                    item.Sessionstring = new DateTime(dateTime.Subtract(item.firstquery).Ticks).ToLongTimeString();
+                    item.Timesession = new DateTime(dateTime.Subtract(item.firstquery).Ticks).ToLongTimeString();
                     item.Countquery++;
-                    //Dispatcher.Invoke(new Action(() => XZ.Text = item.countquery.ToString()));
-                    // item.count=item.countquery.ToString();
                 }
-                
             }
         }
         public void StartServer()//логика работы сервера (вынести отдельно!!)
@@ -130,58 +166,69 @@ namespace UdpServerWPF
             {
                 while (server != null)
                 {
-                   
                     List<string> list = new List<string>();
                     List<Recipe> temp = new List<Recipe>();
                     byte[] byffer = server.ReciveServer();
                     string ansver = Encoding.UTF8.GetString(byffer);
-                    Dispatcher.Invoke(new Action(() => AddUser(server.clientpoint, DateTime.Now)));//добавление юзера, если его еще нет в списке
-                    Dispatcher.Invoke(new Action(() => AddQuery(server.clientpoint, DateTime.Now, ansver)));//добавление запроса 
-                    Dispatcher.Invoke(new Action(() => SetTimeQuery(server.clientpoint, DateTime.Now)));//переустановка длительности сессии и количества запросов
-                    // Console.WriteLine(ansver);
-                    switch (ansver)
+                    if (users.Count < maxcountusers)//ограничение на количество подключенных клиентов
                     {
-                        case "0"://проверяем связь с сервером (типа приветствия)
-                            server.SendServer(Encoding.UTF8.GetBytes("1"));
-                            break;
-                        case "1"://получить все рецепты
-                            byffer = GetBytesFromList(recipes);
-                            //отправляем размер нашего буфера
-                            server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
-                            server.Send_Many_Bytes(byffer);
-                            break;
-                        case "2"://получить рецепты по ингридиентам
-                            byffer = server.ReciveServer();
-                            using (MemoryStream stream = new MemoryStream(byffer))
-                            {
-                                formatter = new BinaryFormatter();
-                                list = (List<string>)formatter.Deserialize(stream);
-                            }
-                            if (list.Count > 0)
-                            {
-                                temp = Choise(list);//плучаем все рецепты по запросу
-                                byffer = GetBytesFromList(temp);
-                                //отправляем размер нашего буфера
-                                server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
-                                server.Send_Many_Bytes(byffer);
-                            }
-                            break;
-                        case "3"://ищем по названию
-                            byffer = server.ReciveServer();
-                            string name = Encoding.UTF8.GetString(byffer);
-                            if (name != string.Empty)
-                            {
-                                temp = FindName(name);
-                                byffer = GetBytesFromList(temp);
-                                //отправляем размер нашего буфера
-                                server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
-                                server.Send_Many_Bytes(byffer);
-                            }
-                            break;
-                        default:
-                            MessageBox.Show("НЕИЗВЕСТНЫЙ ЗАПРОС!");
-                            break;
+                        Dispatcher.Invoke(new Action(() => AddUser(server.clientpoint, DateTime.Now)));//добавление юзера, если его еще нет в списке
+
                     }
+                    //проверка ограничения клиента 1-есть ли он в списке клиентов и нет ли на нем ограничений по запросам
+                    if (users.Any(u => u.endPoint.ToString() == server.clientpoint.ToString()) && !IsBadUser(users.First(u => u.endPoint.ToString() == server.clientpoint.ToString())))
+                    {
+                        Dispatcher.Invoke(new Action(() => AddQuery(server.clientpoint, DateTime.Now, ansver)));//добавление запроса 
+                        Dispatcher.Invoke(new Action(() => SetTimeQuery(server.clientpoint, DateTime.Now)));//переустановка длительности сессии и количества запросов
+                        switch (ansver)
+                        {
+                            case "0"://проверяем связь с сервером (типа приветствия)
+                                server.SendServer(Encoding.UTF8.GetBytes("1"));
+                                break;
+                            case "1"://получить все рецепты
+                                byffer = GetBytesFromList(recipes);
+                                //отправляем размер нашего буфера
+                                server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
+                                server.Send_Many_Bytes(byffer);
+                                break;
+                            case "2"://получить рецепты по ингридиентам
+                                byffer = server.ReciveServer();
+                                using (MemoryStream stream = new MemoryStream(byffer))
+                                {
+                                    formatter = new BinaryFormatter();
+                                    list = (List<string>)formatter.Deserialize(stream);
+                                }
+                                if (list.Count > 0)
+                                {
+                                    temp = Choise(list);//плучаем все рецепты по запросу
+                                    byffer = GetBytesFromList(temp);
+                                    //отправляем размер нашего буфера
+                                    server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
+                                    server.Send_Many_Bytes(byffer);
+                                }
+                                break;
+                            case "3"://ищем по названию
+                                byffer = server.ReciveServer();
+                                string name = Encoding.UTF8.GetString(byffer);
+                                if (name != string.Empty)
+                                {
+                                    temp = FindName(name);
+                                    byffer = GetBytesFromList(temp);
+                                    //отправляем размер нашего буфера
+                                    server.SendServer(Encoding.UTF8.GetBytes(byffer.Length.ToString()));
+                                    server.Send_Many_Bytes(byffer);
+                                }
+                                break;
+                            default:
+                                MessageBox.Show("НЕИЗВЕСТНЫЙ ЗАПРОС!");
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        server.SendServer(Encoding.UTF8.GetBytes("0"));
+                    }
+
                 }
             }
             catch (Exception)
@@ -189,18 +236,32 @@ namespace UdpServerWPF
                 MessageBox.Show("Сервер отключен!");
             }
         }
-        private void FinishButtom_Click(object sender, RoutedEventArgs e)//остановить все подключения
+        public bool IsBadUser(User user)//проверяем нашего клиента, если есть в списке
         {
-            Task.Delay(2000).Wait();
-            if(server!=null)
+            int countquery = 0;
+            if (badadresses.Contains(user.endPoint))
             {
-                server.ServerClose();
-               // Dispatcher.Invoke(new Action(() => MessageBox.Show("Сервер отключен!")));
-            }         
-            server = null;
+                //находим отчетное время с которого нужно проверять колиество запросов ограниченного клиента
+                DateTime beginperiod = DateTime.Now.Subtract(new TimeSpan(0, limintime, 0));
+                foreach (var item in queries)
+                {
+                    if (item.endPoint.ToString() == user.endPoint.ToString() && item.timequery > beginperiod)
+                    {
+                        countquery++;
+                    }
+                }
+                if (countquery >= maxcountqueries) return true;
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
 
         }
-     
         public List<Recipe> Choise(List<string> ingredients)//возвращает лист найденных рецептов
         {
             List<Recipe> choise = new List<Recipe>();
@@ -225,7 +286,6 @@ namespace UdpServerWPF
         }
         public byte[] GetBytesFromList(List<Recipe> temp)
         {
-
             using (MemoryStream stream = new MemoryStream())//переводим все рецепты в байты
             {
                 formatter = new BinaryFormatter();
@@ -233,7 +293,6 @@ namespace UdpServerWPF
                 byte[] byffer = stream.ToArray();
                 return byffer;
             }
-
         }
         public static byte[] Get_byte_from_path(string path)//переводим файл в байты (у нас картинка)
         {
@@ -246,16 +305,6 @@ namespace UdpServerWPF
                 MessageBox.Show("Error Image Path!!!!");
                 return null;
             }
-        }
-
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            SettingsGrid.Visibility = Visibility.Visible;
-        }
-
-        private void CloseSetButton_Click(object sender, RoutedEventArgs e)
-        {
-            SettingsGrid.Visibility = Visibility.Hidden;
         }
     }
 }

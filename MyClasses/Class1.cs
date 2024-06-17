@@ -26,17 +26,16 @@ namespace MyClasses
     {
         public IPEndPoint endPoint {  get; set; }
         public DateTime firstquery {  get; set; }
-        public string sessionstring { get; set; }
-        public bool isblock { get; set; } = false;
+        public string timesession { get; set; }
         public int countquery { get; set; } = 0;
 
-        public string Sessionstring
+        public string Timesession
         {
-            get { return sessionstring; }
+            get { return timesession; }
             set
             {
-                sessionstring = value;
-                OnPropertyChanged("Sessionstring");
+                timesession = value;
+                OnPropertyChanged("Timesession");
             }
         }
         public int Countquery

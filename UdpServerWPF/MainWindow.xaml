@@ -24,7 +24,7 @@
                     IsReadOnly="True" HorizontalGridLinesBrush="DarkGray">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="User adress" Binding="{Binding Path = endPoint}" Width="*"/>
-                    <DataGridTextColumn Header="Time session" Binding="{Binding Path = Sessionstring}" Width="*"/>
+                    <DataGridTextColumn Header="Time session" Binding="{Binding Path = Timesession}" Width="*"/>
                     <DataGridTextColumn Header="Count query" Binding="{Binding Path = Countquery}" />
                 </DataGrid.Columns>
             </DataGrid>
@@ -48,7 +48,7 @@
             <Button x:Name="StartButton" Grid.Row="1" Content="Start" FontSize="18" Height="50" Click="StartButton_Click"/>
             <Button x:Name="FinishButton" Grid.Row="2" Content="Finish" FontSize="18" Height="50" Click="FinishButtom_Click"/>
         </Grid>
-        <Grid x:Name="SettingsGrid" Grid.Column="1" 
+        <Grid x:Name="SettingsGrid" Grid.Column="1" Visibility="Hidden"
                     Width="300" Height="200" VerticalAlignment="Top"
                     Margin="40,30,0,0" Background="LightGray">
             <Grid.RowDefinitions>
@@ -59,10 +59,10 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" 
+                <TextBlock VerticalAlignment="Center" 
                            Text="  Limiting the number of sessions"/>
-                <TextBox x:Name="CountUserText" Width="60" Height="20"
-                         Margin="20,0,0,0" Text="10"/>
+                <TextBox x:Name="CountUserText" Width="30" Height="20"
+                         Margin="10,0,0,0" Text="10"/>
             </StackPanel>
             <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
                        Text="Add a restriction to the address:"/>
@@ -79,8 +79,8 @@
                 <TextBox x:Name="CountQueryText" Text="10" Height="20" Width="60" Margin="5,0,0,0"/>
             </StackPanel>
             <Button x:Name="SetButton" Grid.Row="4" Width="100" Height="25"
-                    Background="WhiteSmoke" Content="Set the setting"/>
-            <Button x:Name="CloseSetButton" Grid.Row="4" Width="20" Height="20" Content="X"
+                    Background="WhiteSmoke" Content="Set the setting" Click="SetButton_Click"/>
+            <Button x:Name="CloseSetButton" Grid.Row="0" Width="20" Height="20" Content="X"
                     HorizontalAlignment="Right" Margin="0,0,10,0" Click="CloseSetButton_Click"/>
         </Grid>
     </Grid>
